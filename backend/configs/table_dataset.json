@@ -1,0 +1,83 @@
+{
+    "description": "Датасет из таблицы xlsx",
+    "script_path": "scripts/celsius_to_kelvin.py",
+    "in_ports": [
+        {
+            "name": "input",
+            "values": [
+                {
+                    "name": "Путь к файлу",
+                    "value": "",
+                    "dimension": "Путь к файлу excel, в котором хранится информация для датасета",
+                    "status": "unknown"
+                }
+            ]
+        }
+    ],
+    "out_ports": [
+        {
+            "name": "Train data",
+            "values": [
+                {
+                    "name": "X_train",
+                    "value": "",
+                    "dimension": "",
+                    "status": "unknown",
+                    "description": "Входные параметры для обучения нейронной сети"
+                },
+                {
+                    "name": "y_train",
+                    "value": "",
+                    "dimension": "",
+                    "status": "unknown",
+                    "description": "Целевые параметры для обучения нейронной сети"
+                }
+            ]
+        },
+        {
+            "name": "Validation data",
+            "values": [
+                {
+                    "name": "X_val",
+                    "value": "",
+                    "dimension": "",
+                    "status": "unknown",
+                    "description": "Входные параметры для валидации нейронной сети"
+                },
+                {
+                    "name": "y_val",
+                    "value": "",
+                    "dimension": "",
+                    "status": "unknown",
+                    "description": "Целевые параметры для валидации нейронной сети"
+                }
+            ]
+        }
+    ],    
+    "parameters": [
+        {"name": "SplitRatio",
+         "value": 0.2,
+         "dimension": "",
+         "description": "Доля, приходящаяся на валидационный набор данных",
+         "min_value": 0.0,
+         "max_value": 1.0,
+         "status": "unknown"
+        },
+        {"name": "XParams",
+         "value": "",
+         "dimension": "",
+         "description": "Список имен столбцов, которые будут использоваться в качестве входных признаков",
+         "status": "unknown"
+        },
+        {"name": "YParams",
+         "value": "",
+         "dimension": "",
+         "description": "Список имен столбцов, которые будут использоваться в качестве целевых данных",
+         "status": "unknown"
+        }],
+    
+    "connections": {
+        "Train data": ["input"],
+        "Validation data": ["input"]
+    }
+}
