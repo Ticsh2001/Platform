@@ -3,6 +3,7 @@ import numpy as np
 from enum import Enum, auto
 from typing import Dict, Iterator, List, Optional, Tuple, Union, Any, Collection, Type, Callable
 import copy
+from dataclasses import dataclass
 
 
 class ValueStatus(Enum):
@@ -26,13 +27,34 @@ class ValueStatus(Enum):
                              f"Допустимые значения: {', '.join([s.name for s in cls])}")
         else:
             raise TypeError(f"Неподдерживаемый тип статуса: {type(status_input)}")
+        
+@dataclass
+class ValueClass:
+    value_name: str             #Название величины (например, энтальпия, энтропия и т.д. - это не конкретное название параметра для данного элемента)
+    physics_type: str = None    #Физическое направление, к которому относится параметр (например, термодинамика, механика и т.д.)
+    dimension: str = None       #Размерность
+
+    def __eq__(self, other: 'ValueClass'):
+        if not isinstance(other, ValueClass):
+            return NotImplemented
+        elif self.physics_type == other.physics_type and self.value_name == other.value_name and self.dimension == other.dimension:
+            return True
+        else:
+            return False
+        
+    def __ne__(self, other: 'ValueClass'):
+        return not self.__eq__(other)
+
+
+
+
 
 
 class Value:
     def __init__(self,
-                 value: Any,
-                 dimension: str,
                  name: str,
+                 value_spec: ValueClass,
+                 value: Any,
                  description: str = "",
                  status: ValueStatus = ValueStatus.UNKNOWN,
                  store_prev: bool = True,
@@ -43,13 +65,11 @@ class Value:
 
         :param value: Значение параметра (любого типа)
         :param dimension: Физическая размерность (например, "m/s")
-        :param name: Имя параметра (идентификатор)
+        :param name: Имя параметра (идентификатор) - например, имя параметра h1 (а )
         :param description: Описание параметра
         :param status: Исходный статус значения
         :param store_prev: Флаг сохранения предыдущих значений
         """
-        self._id = uuid.uuid4()
-        self._dimension = dimension
         self._name = name
         self._description = description
         self._status = ValueStatus.from_input(status)
@@ -58,6 +78,7 @@ class Value:
         self._prev_status = None
         self._min_value = min_value
         self._max_value = max_value
+        self._value_spec = value_spec
 
         # Установка значения с валидацией
         self._val = None
@@ -73,11 +94,6 @@ class Value:
         self._prev_status = self._status
 
     @property
-    def id(self) -> uuid.UUID:
-        """Уникальный идентификатор параметра"""
-        return self._id
-
-    @property
     def value(self) -> Any:
         """Текущее значение параметра"""
         return self._val
@@ -88,9 +104,19 @@ class Value:
         self.update(new_value)
 
     @property
-    def dimension(self) -> str:
+    def dimension(self) -> Optional[str]:
         """Физическая размерность параметра"""
-        return self._dimension
+        return self._value_spec.dimension
+    
+    @property
+    def physics_type(self) -> Optional[str]:
+        """К какой физической группе относится"""
+        return self._value_spec.physics_type
+    
+    @property
+    def physics_value_name(self) -> str:
+        """Физическое название величины"""
+        return self._value_spec.value_name
 
     @property
     def name(self) -> str:
@@ -291,6 +317,10 @@ class Value:
         """Проверка возможности сравнения двух значений"""
         if self.dimension != other.dimension:
             raise ValueError(f"Несовместимые размерности: {self.dimension} vs {other.dimension}")
+        if self.physics_type != other.physics_type:
+            raise ValueError(f'Несовместимые физические направления: {self.physics_type} vs {other.physics_type}')
+        if self.physics_value_name != other.physics_value_name:
+            raise ValueError(f'Несовместимые физические величины: {self.physics_value_name} vs {other.physics_value_name}')
 
         if not hasattr(self._val, '__eq__') or not hasattr(other.value, '__eq__'):
             raise TypeError("Значения не поддерживают операции сравнения")
@@ -435,14 +465,16 @@ class Value:
         - 'max_value': максимальное значение (по умолчанию None)
         """
         # Проверка обязательных параметров
-        required_keys = ['value', 'dimension', 'name']
+        required_keys = ['value', 'name', 'value_spec']
         missing = [key for key in required_keys if key not in data]
         if missing:
             raise ValueError(f"Отсутствуют обязательные ключи: {', '.join(missing)}")
 
         # Извлечение параметров с установкой значений по умолчанию
         value = data['value']
-        dimension = data['dimension']
+        value_spec = ValueClass(data['value_spec']['value_name'], 
+                                data['value_spec'].get('physics_class', None),
+                                data['value_spec'].get('dimension', None))
         name = data['name']
         description = data.get('description', "")
         store_prev = data.get('store_prev', True)
@@ -459,9 +491,9 @@ class Value:
             raise TypeError(f"Неподдерживаемый тип для статуса: {type(status_data)}")
 
         return Value(
-            value=value,
-            dimension=dimension,
             name=name,
+            value_spec=value_spec,
+            value=value,
             description=description,
             status=status,
             store_prev=store_prev,
@@ -494,7 +526,6 @@ class Value:
                 'previous_value': self.previous_value,
                 'previous_status': self.previous_status.name if self.previous_status else None
             })
-
         return data
     
     

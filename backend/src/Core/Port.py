@@ -1,23 +1,20 @@
-from Core.Value import Value, ValueStatus
+from Value import Value, ValueStatus
 import uuid
 from typing import Dict, Iterator, List, Optional, Tuple, Union, Any, Collection
 from enum import Enum, auto
+from ObjectRepository import ObjectRepository
 
 
 class Port:
-    def __init__(self, name: str, *values: Value):
+    def __init__(self, name: str, prefix=None, *values: Value):
         """
         Инициализация порта
 
         :param name: Имя порта (неизменяемое)
         :param values: Объекты Value, принадлежащие порту
         """
-        self._id = uuid.uuid4()
         self._name = name
-        self._values: List[Value] = []
-        self._values_by_name: Dict[str, Value] = {}
-        self._values_by_id: Dict[uuid.UUID, Value] = {}
-
+        self._values = ObjectRepository(rep_type='value', prefix=prefix)
         for value in values:
             self.add_value(value)
 
@@ -25,45 +22,33 @@ class Port:
         """Добавление величины в порт с проверкой уникальности"""
         if not isinstance(value, Value):
             raise TypeError("Можно добавлять только объекты типа Value")
-
-        if value.name in self._values_by_name:
-            raise ValueError(f"Величина с именем '{value.name}' уже существует в порте")
-
-        self._values.append(value)
-        self._values_by_name[value.name] = value
-        self._values_by_id[value.id] = value
-
-    @property
-    def id(self) -> uuid.UUID:
-        """Уникальный идентификатор порта"""
-        return self._id
+        
+        self._values.register_element(value)
 
     @property
     def name(self) -> str:
         """Имя порта (только для чтения)"""
         return self._name
+    
+    @property
+    def port_prefix(self) -> str:
+        return self._values.prefix
 
     def __iter__(self) -> Iterator[Value]:
         """Итерация по величинам порта"""
         return iter(self._values)
 
-    def __getitem__(self, key: Union[int, uuid.UUID, str]) -> Value:
+    def __getitem__(self, key: Union[uuid.UUID, str]) -> Value:
         """Доступ к величинам по индексу, id или имени"""
-        if isinstance(key, int):
-            return self._values[key]
-        elif isinstance(key, uuid.UUID):
-            return self._values_by_id[key]
-        elif isinstance(key, str):
-            return self._values_by_name[key]
-        else:
-            raise TypeError("Ключ должен быть int, uuid.UUID или str")
+        return self._values[key]
 
     def __getattr__(self, name: str) -> Tuple[Any, ValueStatus]:
         """Доступ к величине по имени атрибута: val, status = port.G"""
-        if name in self._values_by_name:
-            value_obj = self._values_by_name[name]
-            return (value_obj.value, value_obj.status)
-        raise AttributeError(f"Порт '{self.name}' не содержит величины '{name}'")
+        value = self._values[name]
+        if value is not None:
+            return value.value, value.status
+        else:
+            raise AttributeError(f"Порт '{self.name}' не содержит величины '{name}'")
 
     def __setattr__(self, name: str, value: Tuple[Any, Union[ValueStatus, str]]):
         """Установка значения и статуса величины: port.G = (50, 'calculated')"""
@@ -91,54 +76,41 @@ class Port:
 
     def get_value(self, identifier: Union[str, uuid.UUID]) -> Optional[Value]:
         """Получение объекта Value по имени или ID"""
-        if isinstance(identifier, str):
-            return self._values_by_name.get(identifier)
-        elif isinstance(identifier, uuid.UUID):
-            return self._values_by_id.get(identifier)
-        return None
+        return self._values.get_object(identifier)
 
-    def get_value_state(self, name: str) -> Optional[Tuple[Any, ValueStatus]]:
-        """Получение состояния величины (значение и статус) по имени"""
-        if name in self._values_by_name:
-            value_obj = self._values_by_name[name]
-            return (value_obj.value, value_obj.status)
-        return None
+    def get_value_state(self, identifier: Union[str, uuid.UUID]) -> Optional[Tuple[Any, ValueStatus]]:
+        """Получение состояния величины (значение и статус)"""
+        value = self._values.get_object(identifier)
+        if value is not None:
+            return (value.value, value.status)
+        else:
+            return None
 
-    def set_value_state(self, name: str, value: Any, status: Union[ValueStatus, str]):
-        """Установка состояния величины по имени"""
-        if name not in self._values_by_name:
-            raise AttributeError(f"Порт '{self.name}' не содержит величины '{name}'")
-
+    def set_value_state(self, identifier: Union[str, uuid.UUID], value: Any, status: Union[ValueStatus, str]):
+        """Установка состояния величины"""
+        if identifier not in self._values:
+            raise AttributeError(f"Порт '{self.name}' не содержит величины '{identifier}'")
         # Преобразование строкового статуса в enum
         if isinstance(status, str):
             try:
                 status = ValueStatus[status.upper()]
             except KeyError:
                 raise ValueError(f"Неизвестный статус: {status}") from None
-
-        self._values_by_name[name].update(value, status)
+        self.values[identifier].update(value, status)
 
 
     def __contains__(self, value: Union[str, uuid.UUID, Value]) -> bool:
-        """Проверка наличия величины в порте"""
-        if isinstance(value, Value):
-            return value.id in self._values_by_id
-        elif isinstance(value, str):
-            return value in self._values_by_name
-        elif isinstance(value, uuid.UUID):
-            return value in self._values_by_id
-        return False
+        return value in self._values
 
 
     def __len__(self) -> int:
         """Количество величин в порте"""
         return len(self._values)
 
-
     def __repr__(self) -> str:
         """Строковое представление порта"""
-        return (f"Port(name={self.name}, id={self.id}, "
-                f"values={[v.name for v in self._values]})")
+        return (f"Port(name={self.name}, "
+                f"values={[v.name for v in self._values.to_list()]})")
 
     def list_by_status(self, status: Union[ValueStatus, str, Collection[Union[ValueStatus, str]]]) -> List[str]:
         """

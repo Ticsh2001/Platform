@@ -1,6 +1,8 @@
 import uuid
 from typing import Dict, List, Optional, Callable, Any, Union, Tuple
-from Core.Value import ValueStatus
+from Value import ValueStatus
+from Port import Port
+from Value import Value
 import re
 
 class Element:
@@ -124,16 +126,20 @@ class Element:
                         parameters: Dict[str, 'Value']):
         """Проверка имен на отсутствие подчеркиваний"""
         # Проверка параметров
-        for param_name in parameters:
-            if '_' in param_name:
+        for param in parameters:
+            if '_' in param.name:
                 raise ValueError(f"Имя параметра '{param_name}' содержит подчеркивание, что недопустимо")
         
         # Проверка портов и величин
-        all_ports = in_ports + out_ports
-        for port in all_ports:
+        for port in in_ports:
             if '_' in port.name:
                 raise ValueError(f"Имя порта '{port.name}' содержит подчеркивание, что недопустимо")
-            
+            for value in port:
+                if '_' in value.name:
+                    raise ValueError(f"Имя величины '{value.name}' в порте '{port.name}' содержит подчеркивание, что недопустимо")
+        for port in out_ports:
+            if '_' in port.name:
+                raise ValueError(f"Имя порта '{port.name}' содержит подчеркивание, что недопустимо")
             for value in port:
                 if '_' in value.name:
                     raise ValueError(f"Имя величины '{value.name}' в порте '{port.name}' содержит подчеркивание, что недопустимо")
@@ -167,9 +173,9 @@ class Element:
         - Величины выходных портов: element.value_name_1_port_index
         """
         # Пытаемся найти параметр
-        if name in self.parameters:
-            value_obj = self.parameters[name]
-            return (value_obj.value, value_obj.status)
+        for param in self.parameters:
+            if param.name == name:
+                return (param.value, param.status)
         
         # Пытаемся разобрать имя величины
         match = re.match(r'^(.+)_(\d)_(\d+)$', name)
@@ -236,5 +242,13 @@ class Element:
         
         # Обновляем значение
         value_obj.update(new_value, status)
+
+if __name__ == '__main__':
+    #elem = Element('fff', 
+    #               [Port('value', Value(10, 'dd', 'val1'))],
+    #               [Port('value', Value(10, 'kk', 'val2'))],
+    #               [Value(10, 'zz', 'val3')], dict())
+    print('1' in ['4', '2', '3'])
+
 
    
