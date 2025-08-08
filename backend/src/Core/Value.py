@@ -30,7 +30,7 @@ class ValueStatus(Enum):
         
 @dataclass
 class ValueClass:
-    value_name: str             #Название величины (например, энтальпия, энтропия и т.д. - это не конкретное название параметра для данного элемента)
+    value_name: str = None             #Название величины (например, энтальпия, энтропия и т.д. - это не конкретное название параметра для данного элемента)
     physics_type: str = None    #Физическое направление, к которому относится параметр (например, термодинамика, механика и т.д.)
     dimension: str = None       #Размерность
 
@@ -46,7 +46,39 @@ class ValueClass:
         return not self.__eq__(other)
 
 
+def combine_dims(dim1: Optional[str], dim2: Optional[str], op: str) -> Optional[str]:
+    """Комбинирует размерности для арифметических операций"""
+    # Обе размерности отсутствуют
+    if dim1 is None and dim2 is None:
+        return None
 
+    # Операции сложения/вычитания
+    if op in ['+', '-']:
+        if dim1 == dim2:
+            return dim1
+        return None
+
+    # Умножение
+    if op == '*':
+        if dim1 is None:
+            return dim2
+        if dim2 is None:
+            return dim1
+        if dim1 == dim2:
+            return f"({dim1})^2"
+        return f"({dim1})*({dim2})"
+
+    # Деление
+    if op == '/':
+        if dim1 is None:
+            return f"1/({dim2})" if dim2 else None
+        if dim2 is None:
+            return dim1
+        if dim1 == dim2:
+            return "1"
+        return f"({dim1})/({dim2})"
+
+    return None
 
 
 
@@ -62,13 +94,14 @@ class Value:
                  max_value: Optional[Any] = None):
         """
         Инициализация параметра
-
-        :param value: Значение параметра (любого типа)
-        :param dimension: Физическая размерность (например, "m/s")
         :param name: Имя параметра (идентификатор) - например, имя параметра h1 (а )
+        :param: value_spec: Спецификация параметра (относится к классу ValueClass)
+        :param value: Значение параметра (любого типа)
         :param description: Описание параметра
         :param status: Исходный статус значения
         :param store_prev: Флаг сохранения предыдущих значений
+        :param min_value: Минимальное значение, допустимое для данного параметра
+        :param max_value: Максимальное значение. допустимое для данного параметра
         """
         self._name = name
         self._description = description
@@ -101,7 +134,10 @@ class Value:
     @value.setter
     def value(self, new_value: Any):
         """Установка нового значения без изменения статуса"""
-        self.update(new_value)
+        try:
+            self.update(new_value)
+        except ValueError as e:
+            raise ValueError(f"Ошибка установки значения для {self.name}: {str(e)}")
 
     @property
     def dimension(self) -> Optional[str]:
@@ -315,6 +351,7 @@ class Value:
     # Добавляем логические операции сравнения
     def _check_comparable(self, other: 'Value') -> None:
         """Проверка возможности сравнения двух значений"""
+        """Проверка возможности сравнения двух значений"""
         if self.dimension != other.dimension:
             raise ValueError(f"Несовместимые размерности: {self.dimension} vs {other.dimension}")
         if self.physics_type != other.physics_type:
@@ -473,7 +510,7 @@ class Value:
         # Извлечение параметров с установкой значений по умолчанию
         value = data['value']
         value_spec = ValueClass(data['value_spec']['value_name'], 
-                                data['value_spec'].get('physics_class', None),
+                                data['value_spec'].get('physics_type', None),
                                 data['value_spec'].get('dimension', None))
         name = data['name']
         description = data.get('description', "")
@@ -527,6 +564,140 @@ class Value:
                 'previous_status': self.previous_status.name if self.previous_status else None
             })
         return data
+
+    def convert(self, new_class: ValueClass):
+        self._value_spec = new_class
+
+    def _numeric_operation(self, other: Union['Value', Any], op: Callable, op_str: str) -> 'Value':
+        # Конвертация обычных чисел в безразмерный Value
+        if not isinstance(other, Value):
+            other = Value(
+                name="constant",
+                value_spec=ValueClass(None, None, None),
+                value=other,
+                status=ValueStatus.FIXED
+            )
+
+        # Проверка на callable
+        if self.is_callable() or other.is_callable():
+            raise TypeError("Арифметические операции запрещены для вызываемых объектов")
+
+        # Проверка числового типа
+        if not isinstance(self.value, (int, float, complex, np.number)) or \
+                not isinstance(other.value, (int, float, complex, np.number)):
+            raise TypeError("Операции разрешены только для числовых типов")
+
+        # Определение спецификации результата
+        new_spec = self._determine_result_spec(other, op_str)
+
+        # Выполнение операции
+        try:
+            new_value = op(self.value, other.value)
+        except Exception as e:
+            raise TypeError(f"Операция не поддерживается: {e}")
+
+        # Создание нового объекта Value
+        return Value(
+            name=f"({self.name}{op_str}{other.name})",
+            value_spec=new_spec,
+            value=new_value,
+            status=ValueStatus.CALCULATED
+        )
+
+    def _determine_result_spec(self, other: 'Value', op_str: str) -> ValueClass:
+        """Определяет спецификацию результата операции"""
+        # Сложение и вычитание
+        if op_str in ['+', '-']:
+            if self._value_spec == other._value_spec:
+                return copy.deepcopy(self._value_spec)
+            if self.dimension == other.dimension:
+                return ValueClass(None, None, self.dimension)
+            return ValueClass(None, None, None)
+
+        # Умножение
+        if op_str == '*':
+            physics_type = (self.physics_type if self.physics_type == other.physics_type
+                            else None)
+            new_dim = combine_dims(self.dimension, other.dimension, '*')
+            return ValueClass(None, physics_type, new_dim)
+
+        # Деление
+        if op_str == '/':
+            physics_type = (self.physics_type if self.physics_type == other.physics_type
+                            else None)
+            new_dim = combine_dims(self.dimension, other.dimension, '/')
+            return ValueClass(None, physics_type, new_dim)
+
+        # Возведение в степень
+        if op_str == '**':
+            # Степень должна быть безразмерной
+            if other.dimension is None and other.physics_type is None:
+                if self.dimension:
+                    try:
+                        # Красивое форматирование для целых степеней
+                        power = int(other.value) if other.value.is_integer() else other.value
+                        new_dim = f"({self.dimension})^{power}"
+                    except:
+                        new_dim = f"({self.dimension})^{other.value}"
+                else:
+                    new_dim = None
+                return ValueClass(None, self.physics_type, new_dim)
+            return ValueClass(None, None, None)
+
+        return ValueClass(None, None, None)
+
+    # Основные арифметические операции
+    def __add__(self, other) -> 'Value':
+        return self._numeric_operation(other, lambda a, b: a + b, '+')
+
+    def __sub__(self, other) -> 'Value':
+        return self._numeric_operation(other, lambda a, b: a - b, '-')
+
+    def __mul__(self, other) -> 'Value':
+        return self._numeric_operation(other, lambda a, b: a * b, '*')
+
+    def __truediv__(self, other) -> 'Value':
+        return self._numeric_operation(other, lambda a, b: a / b, '/')
+
+    def __pow__(self, power) -> 'Value':
+        return self._numeric_operation(power, lambda a, b: a ** b, '**')
+
+    # Обратные операции
+    def __radd__(self, other) -> 'Value':
+        return self.__add__(other)
+
+    def __rsub__(self, other) -> 'Value':
+        return Value("constant", ValueClass(None, None, None), other, ValueStatus.FIXED) - self
+
+    def __rmul__(self, other) -> 'Value':
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other) -> 'Value':
+        return Value("constant", ValueClass(None, None, None), other, ValueStatus.FIXED) / self
+
+    def __rpow__(self, other) -> 'Value':
+        return Value("constant", ValueClass(None, None, None), other, ValueStatus.FIXED) ** self
+
+    # Унарные операции
+    def __neg__(self) -> 'Value':
+        if self.is_callable():
+            raise TypeError("Унарный минус запрещен для вызываемых объектов")
+        return Value(
+            name=f"-{self.name}",
+            value_spec=copy.deepcopy(self._value_spec),
+            value=-self.value,
+            status=ValueStatus.CALCULATED
+        )
+
+    def __abs__(self) -> 'Value':
+        if self.is_callable():
+            raise TypeError("Модуль запрещен для вызываемых объектов")
+        return Value(
+            name=f"|{self.name}|",
+            value_spec=copy.deepcopy(self._value_spec),
+            value=abs(self.value),
+            status=ValueStatus.CALCULATED
+        )
     
     
 if __name__ == '__main__':
