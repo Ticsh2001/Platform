@@ -29,11 +29,15 @@ class Port:
     @property
     def name(self) -> str:
         return self._name
+    
+    @name.setter
+    def name(self, new_name: str):
+        self._name = new_name
 
     def __iter__(self) -> Iterator[Tuple[uuid.UUID, Value]]:
         return iter(self._values.items())
 
-    def __getitem__(self, key: Union[uuid.UUID, str]) -> Value:
+    def __getitem__(self, key: Union[uuid.UUID, str, int]) -> Value:
         return self._values[key]
 
     def __getattr__(self, name: str) -> Tuple[Any, ValueStatus]:
@@ -132,11 +136,10 @@ class Port:
         return not self.__eq__(other)
 
     # Новые методы
-    def update_bulk(self, updates: Dict[str, Tuple[Any, Union[ValueStatus, str]]):
+    def update_bulk(self, updates: Dict[str, Tuple[Any, Union[ValueStatus, str]]]):
         """Массовое обновление значений"""
-
-    for name, (val, status) in updates.items():
-        self.set_value_state(name, val, status)
+        for name, (val, status) in updates.items():
+            self.set_value_state(name, val, status)
 
     def get_all(self) -> Dict[str, Tuple[Any, ValueStatus]]:
         """Получение всех значений порта"""

@@ -1,120 +1,96 @@
 import json
-import importlib.util
-import os
-from typing import Dict, Type, Any
-from .Core.Port import Port
-from .Core.Element import Element
-from .Core.Value import Value
+import importlib
+from typing import Callable, Optional, Dict, Any, List
+from Value import Value, ValueClass, ValueStatus
+from Port import Port
+from Element import Element
 
 class ElementFactory:
-    def __init__(self, config_dir: str):
-        """
-        Инициализация фабрики элементов
-        
-        :param config_dir: Путь к директории с конфигурациями
-        """
-        self.config_dir = config_dir
-        self.templates: Dict[str, dict] = {}
-        self.loaded_scripts: Dict[str, Any] = {}  # Кэш загруженных модулей
-        
-        # Загрузка всех конфигураций при инициализации
-        self.load_all_configs()
+    def __init__(self, value_classes_path: str, ports_path: str, elements_path: str):
+        self.value_classes = self._load_json(value_classes_path)
+        self.ports_def = self._load_json(ports_path)
+        self.element_defs = self._load_json(elements_path)
 
-    def load_all_configs(self):
-        """Загрузка всех JSON-конфигураций из директории"""
-        for filename in os.listdir(self.config_dir):
-            if filename.endswith('.json'):
-                try:
-                    element_type = filename[:-5]  # Убираем .json
-                    with open(os.path.join(self.config_dir, filename)) as f:
-                        self.templates[element_type] = json.load(f)
-                except Exception as e:
-                    print(f"Ошибка загрузки конфигурации {filename}: {str(e)}")
+        self.value_classes_cache: Dict[str, ValueClass] = {
+            k: ValueClass(**v) for k, v in self.value_classes.items()
+        }
 
-    def _load_functions(self, script_path: str) -> dict:
-        """Загрузка функций из скрипта"""
-        if not script_path or not os.path.exists(script_path):
-            return {}
-            
-        # Проверка кэша
-        if script_path in self.loaded_scripts:
-            return self.loaded_scripts[script_path]
-            
-        try:
-            # Динамическая загрузка модуля
-            module_name = os.path.splitext(os.path.basename(script_path))[0]
-            spec = importlib.util.spec_from_file_location(module_name, script_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            
-            # Извлечение функций
-            functions = {
-                'calculate': getattr(module, 'calculate', None),
-                'update_internal_connections': getattr(module, 'update_internal_connections', None),
-                'setup_element': getattr(module, 'setup_element', None)
-            }
-            
-            # Сохранение в кэш
-            self.loaded_scripts[script_path] = functions
-            return functions
-        except Exception as e:
-            print(f"Ошибка загрузки скрипта {script_path}: {str(e)}")
-            return {}
+    def _load_json(self, path: str) -> Dict[str, Any]:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
 
-    def create_element(self, element_type: str, name: str, **kwargs) -> Element:
-        """
-        Создание элемента по типу
-        
-        :param element_type: Тип элемента (соответствует имени JSON-файла)
-        :param name: Имя создаваемого элемента
-        :param kwargs: Дополнительные параметры для переопределения конфигурации
-        :return: Экземпляр Element
-        """
-        if element_type not in self.templates:
-            raise ValueError(f"Unknown element type: {element_type}")
-            
-        config = self.templates[element_type].copy()
-        
-        # Обновление конфигурации пользовательскими параметрами
-        config.update(kwargs)
-        
-        # Загрузка функций из скрипта
-        script_path = config.get('script_path', '')
-        functions = self._load_functions(script_path) if script_path else {}
-        
-        # Создание портов
-        in_ports = self._create_ports(config.get('in_ports', []))
-        out_ports = self._create_ports(config.get('out_ports', []))
-        
-        # Создание параметров
-        parameters = self._create_parameters(config.get('parameters', {}))
-        
-        # Создание элемента
-        return Element(
-            name=name,
+    def _import_func(self, full_path: Optional[str]) -> Optional[Callable]:
+        if not full_path:
+            return None
+        module_path, func_name = full_path.rsplit('.', 1)
+        mod = importlib.import_module(module_path)
+        return getattr(mod, func_name)
+
+    def _build_value(self, val_spec: Dict[str, Any]) -> Value:
+        """Создание Value из описания параметра"""
+        vc_name = val_spec["value_class"]
+        if vc_name not in self.value_classes_cache:
+            raise ValueError(f"ValueClass '{vc_name}' не зарегистрирован")
+        vc = self.value_classes_cache[vc_name]
+        return Value(
+            name=val_spec["param_name"],
+            value_spec=vc,
+            value=val_spec.get("value"),
+            description=val_spec.get("description", ""),
+            status=ValueStatus.from_input(val_spec.get("status", "unknown")),
+            min_value=val_spec.get("min_value"),
+            max_value=val_spec.get("max_value")
+        )
+
+    def _build_port(self, port_spec: Dict[str, Any]) -> Port:
+        """Создаёт порт — из шаблона или вручную"""
+        values = []
+        if "use_port" in port_spec:
+            template_name = port_spec["use_port"]
+            if template_name not in self.ports_def:
+                raise ValueError(f"Шаблон порта '{template_name}' не найден")
+            for v in self.ports_def[template_name]["values"]:
+                values.append(self._build_value(v))
+        elif "values" in port_spec:
+            for v in port_spec["values"]:
+                values.append(self._build_value(v))
+        else:
+            raise ValueError("В порт не добавлены параметры и не указан use_port")
+        return Port(port_spec["name"], *values)
+
+    def _build_ports(self, ports_def: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        return [self._build_port(p).as_dict() for p in ports_def]
+
+    def _build_parameters(self, params_def: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        return [self._build_value(p).to_dict() for p in params_def]
+
+    def create_element(self, element_name: str) -> Element:
+        if element_name not in self.element_defs:
+            raise ValueError(f"Элемент '{element_name}' не зарегистрирован")
+
+        cfg = self.element_defs[element_name]
+        element_cls = Element
+
+        if "class_path" in cfg and cfg["class_path"]:
+            module_path, cls_name = cfg["class_path"].rsplit('.', 1)
+            mod = importlib.import_module(module_path)
+            element_cls = getattr(mod, cls_name)
+
+        in_ports = self._build_ports(cfg.get("in_ports", []))
+        out_ports = self._build_ports(cfg.get("out_ports", []))
+        parameters = self._build_parameters(cfg.get("parameters", []))
+
+        calc_func = self._import_func(cfg.get("functions", {}).get("calculate_func"))
+        update_func = self._import_func(cfg.get("functions", {}).get("update_int_conn_func"))
+        setup_func = self._import_func(cfg.get("functions", {}).get("setup_func"))
+
+        return element_cls(
+            name=element_name,
+            description=cfg.get("description", ""),
             in_ports=in_ports,
             out_ports=out_ports,
             parameters=parameters,
-            connections=config.get('connections', {}),
-            calculate_func=functions.get('calculate'),
-            update_int_conn_func=functions.get('update_internal_connections'),
-            setup_func=functions.get('setup_element')
+            calculate_func=calc_func,
+            update_int_conn_func=update_func,
+            setup_func=setup_func
         )
-
-    def _create_ports(self, ports_config: List[Dict]) -> Dict[str, Port]:
-        """Создание портов из конфигурации"""
-        ports = {}
-        for port_config in ports_config:
-            port = Port(port_config['name'])
-            for value_config in port_config.get('values', []):
-                value = Value.from_dict(value_config)
-                port.add_value(value)
-            ports[port.name] = port
-        return ports
-
-    def _create_parameters(self, params_config: Dict) -> Dict[str, Value]:
-        """Создание параметров из конфигурации"""
-        parameters = {}
-        for name, value_config in params_config.items():
-            parameters[name] = Value.from_dict(value_config)
-        return parameters

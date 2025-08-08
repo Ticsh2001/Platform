@@ -9,6 +9,7 @@ class ObjectRepository(Generic[T]):
         self._base_name_to_id: Dict[str, uuid.UUID] = {}
         self._id_to_base_name: Dict[uuid.UUID, str] = {}
         self._obj_to_id: Dict[int, uuid.UUID] = {}
+        self._obj_list: List[Tuple[uuid.UUID, T]] = []
         if rep_type.lower() in ['value', 'port', 'element']:
             self._repository_type = rep_type.lower()
         else:
@@ -49,6 +50,7 @@ class ObjectRepository(Generic[T]):
         self._base_name_to_id[obj.name] = obj_id
         self._id_to_base_name[obj_id] = obj.name
         self._obj_to_id[id(obj)] = obj_id
+        self._obj_list.append((obj_id, obj))
 
     def get_by_id(self, obj_id: uuid.UUID) -> Optional[T]:
         """Возвращает объект по UUID"""
@@ -91,6 +93,9 @@ class ObjectRepository(Generic[T]):
     @property
     def registered_full_names(self) -> List[str]:
         return [self.get_full_name(name) for name in self.registered_base_names]
+    
+    def is_postfix(self, postfix: str):
+        return postfix == self._postfix
 
     def remove(self, identifier: Union[uuid.UUID, str]) -> None:
         """Удаляет объект по UUID или имени"""
@@ -120,12 +125,16 @@ class ObjectRepository(Generic[T]):
 
         return id(identifier) in self._obj_to_id
 
-    def __getitem__(self, identifier: Union[uuid.UUID, str]) -> T:
+    def __getitem__(self, identifier: Union[uuid.UUID, str, int]) -> T:
         if isinstance(identifier, uuid.UUID):
             obj = self.get_by_id(identifier)
-        else:
+        elif isinstance(identifier, str):
             obj = self.get_by_name(identifier)
-
+        else:
+            try:
+                obj = self._obj_list[identifier]
+            except IndexError:
+                obj = None
         if obj is None:
             raise KeyError(f"Объект не найден: {identifier}")
         return obj
