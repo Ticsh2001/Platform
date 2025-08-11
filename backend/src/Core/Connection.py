@@ -53,7 +53,7 @@ class Connection:
             v_in = in_port.get_value(val_name)
             if v_out.status == ValueStatus.CALCULATED or v_out.status == ValueStatus.FIXED:
                 v_in.update(v_out.value, ValueStatus.DEPEND)
-            elif v_in.status == ValueStatus.CALCULATED or v_in.status == ValueStatus.FIXED::
+            elif v_in.status == ValueStatus.CALCULATED or v_in.status == ValueStatus.FIXED:
                 v_out.update(v_in.value, ValueStatus.DEPEND)
 
     def as_dict(self) -> Dict:

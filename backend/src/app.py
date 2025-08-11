@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import uuid
 import os
-from ElementFactory import ElementFactory
+from backend.src.Factory.ElementFactory import ElementFactory
 
 app = Flask(__name__)
 CORS(app)

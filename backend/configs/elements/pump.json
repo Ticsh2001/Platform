@@ -1,0 +1,16 @@
+{
+    "name": "Centrifugal pump",
+    "author": "Developer 1",
+    "version": "1.0",
+    "description": "Centrifugal pump",
+    "category": "General",
+    "class_path": "elements.thermodinamic",
+    "in_ports": [1],
+    "out_ports": [1],
+    "parameters": [{"param_name": "N", "value_class": "Mechanics.N", "min_value": 0}],
+    "functions": {
+        "calculate_func": "funcs.pump.calculate",
+        "update_int_conn_func": "funcs.thermal.update_ports",
+        "setup_func": null
+    }
+}

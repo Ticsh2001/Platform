@@ -1,0 +1,44 @@
+{
+    "name": "Dummy",
+    "author": "Developer 1",
+    "version": "1.0",
+    "description": "This is dummy element",
+    "category": "General",
+    "class_path": null,
+    "in_ports": [
+        {"name": "inlet1", "use_port": "thermodinamyc_port"},
+        {"name": "inlet2", 
+         "description": "Используется для передачи части термодинамических параметров",
+         "values": [            
+            { "param_name": "G", "value_class": "Thermodynamics.G", "min_value": 0 },
+            { "param_name": "p", "value_class": "Thermodynamics.p", "min_value": 0, "max_value": 1e7 }]
+        }],
+    "out_ports": [
+        {"name": "outlet1", "use_port": "thermodinamyc_port"},
+        {"name": "outlet2", 
+         "description": "Данные о характеристиках работы",
+         "values": [            
+            { "param_name": "G", "value_class": "Thermodynamics.G", "min_value": 0 },
+            { "param_name": "p", "value_class": "General.general", "min_value": 0, "max_value": 10}]
+        }],
+    "parameters": [
+        {
+            "name": "efficiency",
+            "value_class": "General.eta",
+            "value": 0.85,
+            "min_value": 0.5,
+            "max_value": 1.0,
+            "status": "fixed"
+        },
+        {
+            "name": "val2",
+            "value_class": "General.general",
+            "status": "unknown"
+        }
+    ],
+    "functions": {
+        "calculate_func": null,
+        "update_int_conn_func": null,
+        "setup_func": null
+    }
+}

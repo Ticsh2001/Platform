@@ -1,0 +1,26 @@
+{
+    "Thermodynamics": {
+        "physics_type": "Thermodynamics",
+        "values": {
+            "G": {"value_name": "Mass flow", "dimension": "kg/s" },
+            "p": {"value_name": "Pressure", "dimension": "Pa" },
+            "h": {"value_name": "Enthalpy", "dimension": "J/kg" },
+            "medium": {"value_name": "Medium", "dimension": null }
+        }
+    },
+    "General": {
+        "physics_type": "General",
+        "values": {
+            "eta": {"value_name": "Efficiency", "dimension": null},
+            "general": {"value_name": "General value", "dimension": null}
+        }
+    },
+    "Mechanics":{
+        "physics_type": "Mechanics",
+        "values": {
+            "p": {"value_name": "Pressure", "dimension": "Pa"},
+            "N": {"value_name": "Power", "dimension": "W"}
+        }
+
+    }
+}

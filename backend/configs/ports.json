@@ -1,0 +1,11 @@
+{
+    "thermodinamyc_port": {
+        "description": "Используется для передачи термодинамических параметров, содержит в сете расход, давление, энтальпию и модель определения термодинамических параметров",
+        "values": [            
+            { "param_name": "G", "value_class": "Thermodynamics.G", "min_value": 0 },
+            { "param_name": "p", "value_class": "Thermodynamics.p", "min_value": 0, "max_value": 1e7 },
+            { "param_name": "h", "value_class": "Thermodynamics.h" },
+            { "param_name": "medium", "value_class": "Thermodynamics.medium" }
+        ]
+    }
+}
