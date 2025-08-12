@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Python: Текущий файл (с pytest)",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}"],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Весь набор тестов",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests"],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 import uuid
 from typing import Dict
-from Value import ValueStatus
-from ObjectRepository import ObjectRepository
-from Element import Element
+from backend.src.Core.Value import ValueStatus
+from backend.src.Core.ObjectRepository import ObjectRepository
+from backend.src.Core.Element import Element
 
 class Connection:
     def __init__(self,

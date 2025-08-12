@@ -1,3 +1,11 @@
+import re
+import uuid
+from typing import Dict, Any, List, Optional, Union, Tuple, Callable
+
+from backend.src.Core.Port import Port
+from backend.src.Core.Value import Value, ValueStatus
+from backend.src.Core.ObjectRepository import ObjectRepository
+
 class Element:
     PROTECTED_ATTRS = [
         '_name', '_description',

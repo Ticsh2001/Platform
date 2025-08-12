@@ -1,16 +1,27 @@
 {
-    "name": "Centrifugal pump",
-    "author": "Developer 1",
-    "version": "1.0",
-    "description": "Centrifugal pump",
-    "category": "General",
-    "class_path": "elements.thermodinamic",
-    "in_ports": [1],
-    "out_ports": [1],
-    "parameters": [{"param_name": "N", "value_class": "Mechanics.N", "min_value": 0}],
-    "functions": {
-        "calculate_func": "funcs.pump.calculate",
-        "update_int_conn_func": "funcs.thermal.update_ports",
-        "setup_func": null
-    }
+  "name": "Centrifugal pump",
+  "author": "Developer 1",
+  "version": "1.0",
+  "description": "Centrifugal pump",
+  "category": "General",
+  "class_path": "backend.src.elements.Thermodynamic:CentrifugalPump",
+  "in_ports": [1],
+  "out_ports": [1],
+  "parameters": [
+    { "param_name": "N", "value_class": "Mechanics.N", "min_value": 0 }
+  ],
+  "new_param": [
+    0,
+    23,
+    { "$port": { "name": "inlet1", "use_port": "thermodinamyc_port" } },
+    { "$value": { "param_name": "G", "value_class": "Thermodynamics.G", "min_value": 0 } }
+  ],
+  "new_param_2": {
+    "$value": { "param_name": "G2", "value_class": "Thermodynamics.G", "min_value": 0 }
+  },
+  "functions": {
+    "calculate_func": "backend.src.functions.pump:calculate",
+    "update_int_conn_func": "backend.src.functions.thermal:update_ports",
+    "setup_func": null
+  }
 }
