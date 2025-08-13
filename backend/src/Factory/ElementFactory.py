@@ -66,7 +66,7 @@ class ElementFactory:
             missing = self.REQUIRED_FIELDS - set(cfg.keys())
             if missing:
                 raise ValueError(f"В конфиге '{name}.json' отсутствуют обязательные поля: {sorted(missing)}")
-            elements[name] = cfg
+            elements[cfg['name']] = cfg
         return elements
 
     def _load_value_classes(self, data: dict) -> Dict[str, ValueClass]:
@@ -89,7 +89,7 @@ class ElementFactory:
     # -----------------------
     # Импорт по dotted-path
     # -----------------------
-    def _import_attr(self, dotted: Optional[str]) -> Optional[Any]:
+    def _import_attr(self, path: str, dotted: Optional[str]) -> Optional[Any]:
         """
         Импортирует функцию/класс/атрибут по dotted-строке 'package.module:attr' или 'package.module.attr'.
         Допускаем оба формата, двоеточие и точку.
@@ -101,7 +101,7 @@ class ElementFactory:
             module_path, attr_path = dotted.split(":", 1)
         else:
             module_path, attr_path = dotted.rsplit(".", 1)
-        mod = importlib.import_module(module_path)
+        mod = importlib.import_module(f'{path}.{module_path}')
         # поддержка цепочки attr1.attr2...
         obj = mod
         for part in attr_path.split("."):
@@ -270,9 +270,9 @@ class ElementFactory:
 
         # Функции
         funcs = cfg.get("functions", {}) or {}
-        calc_func = self._import_attr(funcs.get("calculate_func"))
-        upd_func = self._import_attr(funcs.get("update_int_conn_func"))
-        setup_func = self._import_attr(funcs.get("setup_func"))
+        calc_func = self._import_attr('backend.src.functions', funcs.get("calculate_func"))
+        upd_func = self._import_attr('backend.src.functions', funcs.get("update_int_conn_func"))
+        setup_func = self._import_attr('backend.src.functions', funcs.get("setup_func"))
 
         # Базовый Element
         if cfg.get("class_path") is None:

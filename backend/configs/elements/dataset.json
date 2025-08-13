@@ -1,0 +1,60 @@
+{
+    "name": "Dataset",
+    "author": "Developer 1",
+    "version": "0.1",
+    "description": "Simple dataset object",
+    "category": "Machine Learning",
+    "class_path": null,
+    "in_ports": [
+        {"name": "RawData",
+         "description":"Источник информации для подготовки датасета",
+         "values": [{"param_name": "data", "value_class": "General.general"}]}],
+    "out_ports": [
+        {"name": "Train",
+         "use_port":"data_machine_learning_port"},
+         {"name": "Val",
+         "use_port":"data_machine_learning_port"}],
+    "parameters": [
+        {
+            "name": "KeepData",
+            "value_class": "General.bool",
+            "value": 1,
+            "min_value": 0.0,
+            "max_value": 1.0,
+            "status": "fixed"
+        },
+        {
+            "name": "SplitRatio",
+            "value_class": "General.general",
+            "value": 0.2,
+            "min_value": 0.0,
+            "max_value": 1.0,
+            "status": "fixed"
+        },
+        {
+            "name": "Seed",
+            "value_class": "General.general",
+            "value": 42,
+            "status": "fixed"
+        },
+        {
+            "name": "RawData",
+            "value_class": "General.general",
+            "store_prev": 0
+
+        },
+        {
+            "name": "XFields",
+            "value_class": "General.general"
+        },
+        {
+            "name": "YFields",
+            "value_class": "General.general"
+        }
+    ],
+    "functions": {
+        "calculate_func": "dataset.calculate",
+        "update_int_conn_func": null,
+        "setup_func": "dataset.setup_element"
+    }
+}

@@ -10,7 +10,7 @@ class ObjectRepository(Generic[T]):
         self._id_to_base_name: Dict[uuid.UUID, str] = {}
         self._obj_to_id: Dict[int, uuid.UUID] = {}
         self._obj_list: List[Tuple[uuid.UUID, T]] = []
-        if rep_type.lower() in ['value', 'port', 'element']:
+        if rep_type.lower() in ['value', 'port', 'element', 'connection']:
             self._repository_type = rep_type.lower()
         else:
             raise ValueError('Некорректно задан тип хранилища')
@@ -155,6 +155,8 @@ class ObjectRepository(Generic[T]):
         """Находит объекты с указанным значением"""
         return [obj for obj in self.repository.values() if getattr(obj, 'value', None) == value]
     
+
+        
    
 if __name__ == '__main__':
     rep = ObjectRepository('element', prefix='1_1')

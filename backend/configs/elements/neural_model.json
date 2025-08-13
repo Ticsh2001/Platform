@@ -1,0 +1,53 @@
+{
+    "name": "NeuralModel",
+    "author": "Developer 1",
+    "version": "0.1",
+    "description": "Simple neural model object",
+    "category": "Machine Learning",
+    "class_path": null,
+    "in_ports": [
+        {"name": "Train",
+         "use_port":"data_machine_learning_port"},
+         {"name": "Val",
+         "use_port":"data_machine_learning_port"}],
+    "out_ports": [
+        {"name": "Out",
+         "description":"Результат работы модели",
+         "values": [{"param_name": "Result", "value_class": "General.general"}]}],
+    "parameters": [
+        {
+            "name": "Arhitecture",
+            "value_class": "General.general",
+            "value": ""},
+        {
+            "name": "Optimizer",
+            "value_class": "General.general",
+            "value": ""},
+        {
+            "name": "LearningRate",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "LossFunc",
+            "value_class": "General.general",
+            "value": ""},
+        {
+            "name": "Metrics",
+            "value_class": "General.general",
+            "store_prev": ""},
+        {
+            "name": "ckpt",
+            "value_class": "General.bool"
+        },
+        {
+            "name": "epochs",
+            "value_class": "General.general"
+        }
+    ],
+    "functions": {
+        "calculate_func": "neural_model.calculate",
+        "update_int_conn_func": null,
+        "setup_func": "neural_model.setup_element"
+    }
+}

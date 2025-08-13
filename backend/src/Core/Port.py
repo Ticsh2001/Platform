@@ -151,7 +151,7 @@ class Port:
             "name": self.name,
             "values": [value.to_dict() for _, value in self._values.items()]
         }
-
+    
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Port":
         """Десериализация порта из словаря"""

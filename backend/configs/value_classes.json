@@ -12,7 +12,8 @@
         "physics_type": "General",
         "values": {
             "eta": {"value_name": "Efficiency", "dimension": null},
-            "general": {"value_name": "General value", "dimension": null}
+            "general": {"value_name": "General value", "dimension": null},
+            "bool": {"value_name": "Boolean value", "dimension": null}
         }
     },
     "Mechanics":{

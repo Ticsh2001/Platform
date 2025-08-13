@@ -11,6 +11,7 @@ class Element:
         '_name', '_description',
         '_in_ports', '_out_ports', '_parameters',
         '_calculate_func', '_update_int_conn_func', '_setup_func',
+        '_internal_groups',
         'PROTECTED_ATTRS'
     ]
 
@@ -22,13 +23,15 @@ class Element:
                  parameters: List[Union[dict, Value]],
                  calculate_func: Optional[Callable[['Element'], None]] = None,
                  update_int_conn_func: Optional[Callable[['Element'], None]] = None,
-                 setup_func: Optional[Callable[['Element'], None]] = None):
+                 setup_func: Optional[Callable[['Element'], None]] = None,
+                 internal_connections: Optional[List[List[Union[str, uuid.UUID]]]] = None):
 
         super().__setattr__('_name', name)
         super().__setattr__('_description', description)
         super().__setattr__('_in_ports', ObjectRepository(rep_type='port', postfix=name))
         super().__setattr__('_out_ports', ObjectRepository(rep_type='port', postfix=name))
         super().__setattr__('_parameters', ObjectRepository(rep_type='value', postfix=name))
+        super().__setattr__('_internal_groups', [])
 
         for port in in_ports:
             self._add_port(port, is_input=True)
@@ -37,12 +40,19 @@ class Element:
         for param in parameters:
             self._add_parameter(param)
 
+        if internal_connections:
+            # допускаем и имена, и UUID — приведём к UUID
+            if internal_connections and isinstance(internal_connections[0][0], str):
+                self.set_internal_connections_by_names(internal_connections)
+            else:
+                self.set_internal_connections_by_ids(internal_connections)
+
         self._validate_and_set_func('_calculate_func', calculate_func)
         self._validate_and_set_func('_update_int_conn_func', update_int_conn_func)
         self._validate_and_set_func('_setup_func', setup_func)
 
         if self._setup_func:
-            self._setup_func(self)
+            self._setup_func(in_ports=self._in_ports, out_ports=self._out_ports, parameters=self._parameters)
 
     def _add_port(self, port_data: Union[dict, Port], is_input: bool):
         port = port_data if isinstance(port_data, Port) else Port.from_dict(port_data)
@@ -155,7 +165,7 @@ class Element:
 
     def calculate(self):
         if self._calculate_func:
-            self._calculate_func(self)
+            self._calculate_func(in_ports=self._in_ports, out_ports=self._out_ports, parameters=self._parameters)
         else:
             raise NotImplementedError("Calculate function not implemented")
 
@@ -265,3 +275,37 @@ class Element:
             for val_name in port._values.registered_base_names:
                 result.append((port_id, val_name))
         return result
+    
+    def _port_id_by_name(self, name: str) -> uuid.UUID:
+        p = self._in_ports.get_by_name(name) or self._out_ports.get_by_name(name)
+        if not p:
+            raise KeyError(f"Порт '{name}' не найден в элементе {self.name}")
+        for pid, pobj in list(self._in_ports.items()) + list(self._out_ports.items()):
+            if pobj is p:
+                return pid
+        raise KeyError(f"ID порта '{name}' не найден в элементе {self.name}")
+
+    def set_internal_connections_by_names(self, groups: List[List[str]]) -> None:
+        """
+        [['inlet1','outlet1'], ['inlet2','outlet2']] или [['inlet','out1','out2']]
+        Преобразует имена в UUID и сохраняет.
+        """
+        resolved: List[List[uuid.UUID]] = []
+        for group in groups:
+            g = [self._port_id_by_name(n) for n in group]
+            resolved.append(g)
+        super().__setattr__('_internal_groups', resolved)
+
+    def set_internal_connections_by_ids(self, groups: List[List[uuid.UUID]]) -> None:
+        """Сохраняет группы UUID портов как есть."""
+        # Можно добавить валидации принадлежности ID элементу
+        super().__setattr__('_internal_groups', [list(group) for group in groups])
+
+    def get_internal_connection_groups_ids(self) -> List[List[uuid.UUID]]:
+        """Отдаёт группы внутренних связей как списки UUID портов — для построения графа в Scheme."""
+        return [list(g) for g in self._internal_groups]
+
+    # Удобная обёртка: вызвать пользовательскую функцию обновления внутренних связей, если она задана
+    def update_internal_connections(self) -> None:
+        if self._update_int_conn_func:
+            self._update_int_conn_func(self)
