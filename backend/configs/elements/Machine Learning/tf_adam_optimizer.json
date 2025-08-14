@@ -1,0 +1,96 @@
+{
+    "name": "TF Adam Optimizer",
+    "author": "Developer 1",
+    "version": "0.1",
+    "description": "TF Adam Optimizer",
+    "category": "Machine Learning",
+    "class_path": null,
+    "in_ports":
+    [],
+    "out_ports": 
+    [
+        {
+            "name": "Optimizer",
+            "use_port":"optimizer_machine_learning_port"            
+        }
+    ],
+    "parameters": 
+    [
+        {
+            "name": "LearningRate",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "beta1",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "beta2",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "epsilon",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "amsgrad",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "WeightDecay",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "clipnorm",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "clipvalue",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "GlobalClipnorm",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "UseEma",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "EmaMomentum",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "EmaOverwriteFrequency",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "LossScaleFactor",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "GradientAccumulationSteps",
+            "value_class": "General.general",
+            "value": ""
+        }
+    ],
+    "functions": 
+    {
+        "calculate_func": "MachineLearning.optimizers.tf_Adam.calculate",
+        "update_int_conn_func": null,
+        "setup_func": "MachineLearning.optimizers.tf_Adam.setup_element"
+    }
+}

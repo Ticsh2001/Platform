@@ -73,6 +73,9 @@ class Port:
     def get_value(self, identifier: Union[str, uuid.UUID]) -> Optional[Value]:
         return self._values.get_by_name(identifier) if isinstance(identifier, str) else self._values.get_by_id(
             identifier)
+    
+    def get_value_state(self, name: str) -> Tuple[Any, ValueStatus]:
+        return self.__getattr__(name)
 
     def get_value_state(self, identifier: Union[str, uuid.UUID]) -> Optional[Tuple[Any, ValueStatus]]:
         value = self.get_value(identifier)

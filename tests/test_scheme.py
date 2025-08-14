@@ -22,6 +22,12 @@ scheme.set_param(dataset_elem, "SplitRatio", 0.2, ValueStatus.FIXED)
 scheme.set_param(dataset_elem, "XFields", [0, 1], ValueStatus.FIXED)
 scheme.set_param(dataset_elem, "YFields", [2], ValueStatus.FIXED)
 
+opt = ef.create_element('TF Adam Optimizer')
+scheme.add_element(opt)
+
+opt = ef.create_element('TF MSE Loss Function')
+scheme.add_element(opt)
+
 # 4) Запускаем расчёт
 scheme.run_calculations()
 

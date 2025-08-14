@@ -53,6 +53,41 @@ def repos_test_condition(repositories: List[ObjectRepository], known_names: Opti
         res_unknown = True
     return res_known and res_unknown
 
+def get_values(repositories: Union[List[ObjectRepository], ObjectRepository], values_names: List[str]):
+    res = dict()
+    if isinstance(repositories, ObjectRepository):
+        repositories = [repositories]
+    for name in values_names:
+        if '_' in name:
+            val, port = tuple(name.split('_'))
+        else:
+            val, port = name, None
+        if port is not None:
+            for rep in repositories:
+                if rep.repository_type == 'port' and port in rep:
+                    value, status = rep.get_by_name(port).get_value_state(val)
+                    if status != ValueStatus.UNKNOWN:
+                        res[name] = value
+                    else:
+                        res[name] = None
+                        break
+        else:
+            for rep in repositories:
+                if rep.repository_type == 'value' and val in rep:
+                    value, status = rep.get_by_name(val).get_state()
+                    if status != ValueStatus.UNKNOWN:
+                        res[val] = value
+                    else:
+                        res[val] = None
+                        break
+        if val not in res:
+            res[val] = None
+    return res
+                
+
+
+    
+
     
             
 

@@ -1,0 +1,31 @@
+{
+    "name": "TF MSE Loss Function",
+    "author": "Developer 1",
+    "version": "0.1",
+    "description": "Mean squared error object",
+    "category": "Machine Learning",
+    "class_path": null,
+    "in_ports":
+    [],
+    "out_ports": 
+    [
+        {
+            "name": "LossFunction", 
+            "use_port": "loss_function_machine_learning_port"
+        }
+    ],
+    "parameters": 
+    [
+        {
+            "name": "reduction",
+            "value_class": "General.general",
+            "value": ""
+        }
+    ],
+    "functions": 
+    {
+        "calculate_func": "MachineLearning.losses.tf_mse.calculate",
+        "update_int_conn_func": null,
+        "setup_func": null
+    }
+}

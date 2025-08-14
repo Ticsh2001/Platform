@@ -8,11 +8,52 @@
             { "param_name": "medium", "value_class": "Thermodynamics.medium" }
         ]
     },
-    "data_machine_learning_port": {
+    "data_machine_learning_port": 
+    {
         "description": "Используется для передачи данных при машинном обучении",
-        "values": [            
-            { "param_name": "X", "value_class": "General.general"},
-            { "param_name": "y", "value_class": "General.general"}
+        "values":
+        [            
+            {
+                "param_name": "X",
+                "value_class": "General.general"
+            },
+            {
+                "param_name": "y",
+                "value_class": "General.general"
+            }
+        ]
+    },
+    "optimizer_machine_learning_port":
+    {
+        "description": "Используется для передачи оптимизатора обучения нейронной модели",
+        "values":
+        [
+            {
+                "param_name": "OptimizerObject",
+                "value_class": "General.general"
+            }
+        ]
+    },
+    "loss_function_machine_learning_port":
+    {
+        "description": "Функция потерь для обучения",
+        "values": 
+        [
+            {
+                "param_name": "LossFuncObject",
+                "value_class": "General.general"
+            }
+        ]
+    },
+    "callback_function_machine_learning_port":
+    {
+        "description": "Функция, вызываемые при обучении модели",
+        "values": 
+        [
+            {
+                "param_name": "CallBackObject",
+                "value_class": "General.general"
+            }
         ]
     }
 }

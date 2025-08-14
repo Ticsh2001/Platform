@@ -37,13 +37,20 @@ class ValueClass:
     def __eq__(self, other: 'ValueClass'):
         if not isinstance(other, ValueClass):
             return NotImplemented
-        elif self.physics_type == other.physics_type and self.value_name == other.value_name and self.dimension == other.dimension:
-            return True
-        else:
-            return False
+        return (self.physics_type == other.physics_type and
+                self.value_name == other.value_name and
+                self.dimension == other.dimension)
         
     def __ne__(self, other: 'ValueClass'):
         return not self.__eq__(other)
+    
+    def __hash__(self) -> int:
+        # Позволяет использовать ValueClass как ключ словаря/множества
+        return hash((self.physics_type, self.value_name, self.dimension))
+
+    def as_key(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        # Удобный кортеж-ключ (если не хотите полагаться на __hash__)
+        return (self.physics_type, self.value_name, self.dimension)
 
 
 def combine_dims(dim1: Optional[str], dim2: Optional[str], op: str) -> Optional[str]:
@@ -208,6 +215,11 @@ class Value:
     def max_value(self) -> Optional[Any]:
         """Максимально допустимое значение"""
         return self._max_value
+    
+    @property
+    def value_spec(self) -> ValueClass:
+        """Спецификация значения (тип/физика/размерность)"""
+        return self._value_spec
 
     def _validate_value(self, value: Any):
         """Проверка значения на соответствие границам"""

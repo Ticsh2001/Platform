@@ -155,9 +155,6 @@ class ObjectRepository(Generic[T]):
         """Находит объекты с указанным значением"""
         return [obj for obj in self.repository.values() if getattr(obj, 'value', None) == value]
     
-
-        
-   
 if __name__ == '__main__':
     rep = ObjectRepository('element', prefix='1_1')
     rep.register_element(Value(10, 'zz', 'val3'))

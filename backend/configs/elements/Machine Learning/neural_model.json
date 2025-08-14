@@ -1,0 +1,87 @@
+{
+    "name": "NeuralModel",
+    "author": "Developer 1",
+    "version": "0.1",
+    "description": "Simple neural model train object",
+    "category": "Machine Learning",
+    "class_path": null,
+    "in_ports":
+    [
+        {
+            "name": "Train",
+            "use_port":"data_machine_learning_port"
+        },
+        {
+            "name": "Val",
+            "use_port":"data_machine_learning_port"
+        },
+        {
+            "name": "LossFunction", 
+            "use_port": "loss_function_machine_learning_port"
+        },
+        {
+            "name": "Optimizer",
+            "use_port":"optimizer_machine_learning_port"            
+        },
+        {
+            "name": "Callbacks",
+            "use_port": "callback_function_machine_learning_port"
+        },
+        {
+            "name": "Metrics",
+            "description": "Метрики качества при обучении",
+            "values": 
+            [
+                {
+                    "param_name": "MetricsObjects",
+                    "value_class": "General.general"
+                }
+            ]
+        }
+    ],
+    "out_ports": 
+    [
+        {
+            "name": "Model",
+            "description":"Обученная нейронная сеть",
+            "values": 
+            [
+                {
+                    "param_name": "NeuralModel", 
+                    "value_class": "General.general"
+                }
+            ]
+        }
+    ],
+    "parameters": 
+    [
+        {
+            "name": "Arhitecture",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "ModelOptions",
+            "value_class": "General.general",
+            "value": ""
+        },
+        {
+            "name": "epochs",
+            "value_class": "General.general"
+        },
+        {
+            "name": "history",
+            "value_class": "General.general"
+        },
+        {
+            "name": "ReFit",
+            "value_class": "General.general"
+        }
+    ],
+    "functions": 
+    {
+        "calculate_func": "MachineLearning.models.tf_neural_model.calculate",
+        "update_int_conn_func": null,
+        "setup_func": "MachineLearning.models.tf_neural_model.setup_element"
+    }
+}
