@@ -8,27 +8,27 @@
     "in_ports":
     [
         {
-            "name": "Train",
+            "name": "train",
             "use_port":"data_machine_learning_port"
         },
         {
-            "name": "Val",
+            "name": "val",
             "use_port":"data_machine_learning_port"
         },
         {
-            "name": "LossFunction", 
+            "name": "loss_function",
             "use_port": "loss_function_machine_learning_port"
         },
         {
-            "name": "Optimizer",
+            "name": "optimizer",
             "use_port":"optimizer_machine_learning_port"            
         },
         {
-            "name": "Callbacks",
+            "name": "callbacks",
             "use_port": "callback_function_machine_learning_port"
         },
         {
-            "name": "Metrics",
+            "name": "metrics",
             "description": "Метрики качества при обучении",
             "values": 
             [
@@ -42,12 +42,12 @@
     "out_ports": 
     [
         {
-            "name": "Model",
+            "name": "model",
             "description":"Обученная нейронная сеть",
             "values": 
             [
                 {
-                    "param_name": "NeuralModel", 
+                    "param_name": "neural_model",
                     "value_class": "General.general"
                 }
             ]
@@ -56,12 +56,12 @@
     "parameters": 
     [
         {
-            "name": "Arhitecture",
+            "name": "architecture",
             "value_class": "General.general",
             "value": ""
         },
         {
-            "name": "ModelOptions",
+            "name": "model_options",
             "value_class": "General.general",
             "value": ""
         },
@@ -74,7 +74,7 @@
             "value_class": "General.general"
         },
         {
-            "name": "ReFit",
+            "name": "refit",
             "value_class": "General.general"
         }
     ],

@@ -278,10 +278,15 @@ class ElementIO:
     Позволяет удобно обращаться к входам/выходам/параметрам
     и проверять готовность данных.
     """
-    def __init__(self, in_ports: ObjectRepository, out_ports: ObjectRepository, params: ObjectRepository):
+    def __init__(self, name: str, in_ports: ObjectRepository, out_ports: ObjectRepository, params: ObjectRepository):
         self.inputs = PortsProxy(in_ports)
         self.outputs = PortsProxy(out_ports)
         self.params = ParamsProxy(params)
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     def get(self, path: str) -> Any:
         for obj in [self.inputs, self.outputs, self.params]:
@@ -290,7 +295,7 @@ class ElementIO:
         raise KeyError(f"Не найден путь/параметр: {path}")
 
     def set(self, path: str, value: Any, status: ValueStatus = ValueStatus.CALCULATED):
-        for obj in [self.inputs, self.outputs, self.params]:
+        for obj in [self.outputs, self.inputs, self.params]:
             if path in obj:
                 return obj.set(path, value, status)
         raise KeyError(f"Не найден путь/параметр: {path}")

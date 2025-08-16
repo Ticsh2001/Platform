@@ -14,7 +14,7 @@
         "values":
         [            
             {
-                "param_name": "X",
+                "param_name": "x",
                 "value_class": "General.general"
             },
             {
@@ -29,7 +29,7 @@
         "values":
         [
             {
-                "param_name": "OptimizerObject",
+                "param_name": "optimizer_object",
                 "value_class": "General.general"
             }
         ]
@@ -40,7 +40,7 @@
         "values": 
         [
             {
-                "param_name": "LossFuncObject",
+                "param_name": "loss_function_object",
                 "value_class": "General.general"
             }
         ]
@@ -51,7 +51,7 @@
         "values": 
         [
             {
-                "param_name": "CallBackObject",
+                "param_name": "callback_object",
                 "value_class": "General.general"
             }
         ]
