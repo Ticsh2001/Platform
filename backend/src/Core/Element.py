@@ -5,6 +5,7 @@ from typing import Dict, Any, List, Optional, Union, Tuple, Callable
 from backend.src.Core.Port import Port
 from backend.src.Core.Value import Value, ValueStatus
 from backend.src.Core.ObjectRepository import ObjectRepository
+from backend.src.Core.ElementProxy import ElementIO
 
 class Element:
     PROTECTED_ATTRS = [
@@ -52,7 +53,9 @@ class Element:
         self._validate_and_set_func('_setup_func', setup_func)
 
         if self._setup_func:
-            self._setup_func(in_ports=self._in_ports, out_ports=self._out_ports, parameters=self._parameters)
+            self._setup_func(ElementIO(in_ports=self._in_ports,
+                                       out_ports=self._out_ports,
+                                       params=self._parameters))
 
     def _add_port(self, port_data: Union[dict, Port], is_input: bool):
         port = port_data if isinstance(port_data, Port) else Port.from_dict(port_data)
@@ -165,7 +168,9 @@ class Element:
 
     def calculate(self):
         if self._calculate_func:
-            self._calculate_func(in_ports=self._in_ports, out_ports=self._out_ports, parameters=self._parameters)
+            self._calculate_func(ElementIO(in_ports=self._in_ports,
+                                           out_ports=self._out_ports,
+                                           params=self._parameters))
         else:
             raise NotImplementedError("Calculate function not implemented")
 

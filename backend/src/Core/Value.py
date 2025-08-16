@@ -571,7 +571,6 @@ class Value:
 
         if include_private:
             data.update({
-                'id': str(self.id),
                 'previous_value': self.previous_value,
                 'previous_status': self.previous_status.name if self.previous_status else None
             })

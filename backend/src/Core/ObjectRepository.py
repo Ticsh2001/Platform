@@ -33,8 +33,6 @@ class ObjectRepository(Generic[T]):
         return obj_type == self._repository_type
 
     def _validate_base_name(self, base_name: str) -> None:
-        if '_' in base_name:
-            raise ValueError(f"Базовое имя '{base_name}' содержит подчеркивание, что недопустимо")
         if base_name in self._base_name_to_id:
             raise ValueError(f"Базовое имя '{base_name}' уже зарегистрировано")
 

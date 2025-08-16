@@ -148,7 +148,7 @@ class Port:
         """Получение всех значений порта"""
         return {name: self.__getattr__(name) for name in self._values.registered_base_names}
 
-    def as_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация порта в словарь"""
         return {
             "name": self.name,
